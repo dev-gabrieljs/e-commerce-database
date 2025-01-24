@@ -1,0 +1,122 @@
+
+CREATE TABLE Cliente_PF (
+    id_cliente INT PRIMARY KEY,
+    nome VARCHAR(100),
+    cpf VARCHAR(14) UNIQUE,
+    endereco VARCHAR(255)
+);
+
+-- Tabela de Clientes PJ
+CREATE TABLE Cliente_PJ (
+    id_cliente INT PRIMARY KEY,
+    nome_fantasia VARCHAR(100),
+    cnpj VARCHAR(18) UNIQUE,
+    endereco VARCHAR(255)
+);
+
+
+CREATE TABLE Pedidos (
+    id_pedido INT PRIMARY KEY,
+    id_cliente INT,
+    data_pedido DATE,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente_PF(id_cliente) 
+        ON DELETE CASCADE 
+  
+);
+
+
+CREATE TABLE Produtos (
+    id_produto INT PRIMARY KEY,
+    nome_produto VARCHAR(100),
+    preco DECIMAL(10, 2),
+    id_fornecedor INT,
+    FOREIGN KEY (id_fornecedor) REFERENCES Fornecedores(id_fornecedor)
+);
+
+
+CREATE TABLE Fornecedores (
+    id_fornecedor INT PRIMARY KEY,
+    nome_fornecedor VARCHAR(100),
+    telefone VARCHAR(15)
+);
+
+
+CREATE TABLE Pagamentos (
+    id_pagamento INT PRIMARY KEY,
+    id_pedido INT,
+    tipo_pagamento VARCHAR(50),
+    valor DECIMAL(10, 2),
+    FOREIGN KEY (id_pedido) REFERENCES Pedidos(id_pedido)
+);
+
+
+CREATE TABLE Entregas (
+    id_entrega INT PRIMARY KEY,
+    id_pedido INT,
+    status_entrega VARCHAR(50),
+    codigo_rastreio VARCHAR(50),
+    FOREIGN KEY (id_pedido) REFERENCES Pedidos(id_pedido)
+);
+
+
+-- Inserindo clientes PF e PJ
+INSERT INTO Cliente_PF (id_cliente, nome, cpf, endereco) VALUES
+(1, 'João Silva', '12345678901', 'Rua ABC, 123'),
+(2, 'Maria Oliveira', '98765432100', 'Rua XYZ, 456');
+
+INSERT INTO Cliente_PJ (id_cliente, nome_fantasia, cnpj, endereco) VALUES
+(3, 'Loja XYZ', '12345678000195', 'Av. Paulista, 1000');
+
+-- Inserindo produtos e fornecedores
+INSERT INTO Fornecedores (id_fornecedor, nome_fornecedor, telefone) VALUES
+(1, 'Fornecedor A', '11123456789'),
+(2, 'Fornecedor B', '11223344556');
+
+INSERT INTO Produtos (id_produto, nome_produto, preco, id_fornecedor) VALUES
+(1, 'Produto 1', 100.00, 1),
+(2, 'Produto 2', 200.00, 2);
+
+-- Inserindo pedidos e pagamentos
+INSERT INTO Pedidos (id_pedido, id_cliente, data_pedido) VALUES
+(1, 1, '2023-01-15'),
+(2, 2, '2023-01-20');
+
+INSERT INTO Pagamentos (id_pagamento, id_pedido, tipo_pagamento, valor) VALUES
+(1, 1, 'Cartão de Crédito', 100.00),
+(2, 2, 'Boleto', 200.00);
+
+
+
+SELECT c.nome_fantasia AS cliente, COUNT(p.id_pedido) AS total_pedidos
+FROM Cliente_PJ c
+JOIN Pedidos p ON c.id_cliente = p.id_cliente
+GROUP BY c.id_cliente;
+
+-- Para Cliente PF
+SELECT c.nome, COUNT(p.id_pedido) AS total_pedidos
+FROM Cliente_PF c
+JOIN Pedidos p ON c.id_cliente = p.id_cliente
+GROUP BY c.id_cliente;
+
+
+SELECT v.nome_fornecedor
+FROM Vendedores v
+JOIN Fornecedores f ON v.id_fornecedor = f.id_fornecedor
+WHERE v.id_fornecedor = f.id_fornecedor;
+
+SELECT p.nome_produto, f.nome_fornecedor, e.quantidade_estoque
+FROM Produtos p
+JOIN Fornecedores f ON p.id_fornecedor = f.id_fornecedor
+JOIN Estoques e ON p.id_produto = e.id_produto;
+
+
+SELECT f.nome_fornecedor, p.nome_produto
+FROM Produtos p
+JOIN Fornecedores f ON p.id_fornecedor = f.id_fornecedor;
+
+SELECT p.id_pedido, e.status_entrega, e.codigo_rastreio
+FROM Pedidos p
+JOIN Entregas e ON p.id_pedido = e.id_pedido;
+
+
+
