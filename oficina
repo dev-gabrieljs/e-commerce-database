@@ -1,0 +1,126 @@
+-- Tabela de Clientes
+CREATE TABLE Clientes (
+    id_cliente INT PRIMARY KEY,
+    nome VARCHAR(100),
+    cpf VARCHAR(14) UNIQUE,
+    telefone VARCHAR(15),
+    endereco VARCHAR(255)
+);
+
+-- Tabela de Veículos
+CREATE TABLE Veiculos (
+    id_veiculo INT PRIMARY KEY,
+    id_cliente INT,
+    modelo VARCHAR(100),
+    placa VARCHAR(8) UNIQUE,
+    ano_fabricacao INT,
+    tipo VARCHAR(50),
+    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) ON DELETE CASCADE
+);
+
+-- Tabela de Serviços
+CREATE TABLE Servicos (
+    id_servico INT PRIMARY KEY,
+    descricao VARCHAR(255),
+    valor DECIMAL(10, 2)
+);
+
+-- Tabela de Funcionários
+CREATE TABLE Funcionarios (
+    id_funcionario INT PRIMARY KEY,
+    nome VARCHAR(100),
+    cargo VARCHAR(50),
+    salario DECIMAL(10, 2)
+);
+
+-- Tabela de Ordens de Serviço
+CREATE TABLE Ordens_Servico (
+    id_os INT PRIMARY KEY,
+    id_veiculo INT,
+    id_funcionario INT,
+    data_inicio DATE,
+    data_fim DATE,
+    status VARCHAR(50),
+    FOREIGN KEY (id_veiculo) REFERENCES Veiculos(id_veiculo) ON DELETE CASCADE,
+    FOREIGN KEY (id_funcionario) REFERENCES Funcionarios(id_funcionario)
+);
+
+-- Tabela de Relacionamento entre Ordens de Serviço e Serviços (Muitos para muitos)
+CREATE TABLE Ordem_Servico_Servicos (
+    id_os INT,
+    id_servico INT,
+    PRIMARY KEY (id_os, id_servico),
+    FOREIGN KEY (id_os) REFERENCES Ordens_Servico(id_os),
+    FOREIGN KEY (id_servico) REFERENCES Servicos(id_servico)
+);
+
+
+-- Inserindo Clientes
+INSERT INTO Clientes (id_cliente, nome, cpf, telefone, endereco) VALUES
+(1, 'João Silva', '12345678901', '987654321', 'Rua das Flores, 123'),
+(2, 'Maria Oliveira', '98765432100', '123456789', 'Avenida Brasil, 456');
+
+-- Inserindo Veículos
+INSERT INTO Veiculos (id_veiculo, id_cliente, modelo, placa, ano_fabricacao, tipo) VALUES
+(1, 1, 'Fusca', 'ABC-1234', 1980, 'Carro'),
+(2, 2, 'Gol', 'XYZ-5678', 2015, 'Carro');
+
+-- Inserindo Funcionários
+INSERT INTO Funcionarios (id_funcionario, nome, cargo, salario) VALUES
+(1, 'Carlos Pereira', 'Mecânico', 2000.00),
+(2, 'Luciana Costa', 'Atendente', 1500.00);
+
+-- Inserindo Serviços
+INSERT INTO Servicos (id_servico, descricao, valor) VALUES
+(1, 'Troca de óleo', 100.00),
+(2, 'Balanceamento de rodas', 150.00);
+
+-- Inserindo Ordens de Serviço
+INSERT INTO Ordens_Servico (id_os, id_veiculo, id_funcionario, data_inicio, data_fim, status) VALUES
+(1, 1, 1, '2023-01-10', '2023-01-12', 'Concluído'),
+(2, 2, 2, '2023-01-15', '2023-01-16', 'Em andamento');
+
+-- Relacionando Serviços às Ordens de Serviço
+INSERT INTO Ordem_Servico_Servicos (id_os, id_servico) VALUES
+(1, 1),
+(1, 2),
+(2, 1);
+
+
+-- Recupera todos os clientes
+SELECT * FROM Clientes;
+
+
+-- Recupera as ordens de serviço concluídas
+SELECT * FROM Ordens_Servico WHERE status = 'Concluído';
+
+
+-- Exemplo de calcular o total de serviços realizados em uma ordem de serviço
+SELECT os.id_os, SUM(s.valor) AS total_servicos
+FROM Ordens_Servico os
+JOIN Ordem_Servico_Servicos oss ON os.id_os = oss.id_os
+JOIN Servicos s ON oss.id_servico = s.id_servico
+GROUP BY os.id_os;
+
+-- Lista os clientes ordenados pelo nome
+SELECT nome FROM Clientes ORDER BY nome;
+
+
+-- Recupera ordens de serviço que possuem mais de um serviço
+SELECT os.id_os, COUNT(oss.id_servico) AS num_servicos
+FROM Ordens_Servico os
+JOIN Ordem_Servico_Servicos oss ON os.id_os = oss.id_os
+GROUP BY os.id_os
+HAVING COUNT(oss.id_servico) > 1;
+
+
+-- Recupera a lista de clientes e os serviços realizados em seus veículos
+SELECT c.nome, v.modelo, s.descricao
+FROM Clientes c
+JOIN Veiculos v ON c.id_cliente = v.id_cliente
+JOIN Ordens_Servico os ON v.id_veiculo = os.id_veiculo
+JOIN Ordem_Servico_Servicos oss ON os.id_os = oss.id_os
+JOIN Servicos s ON oss.id_servico = s.id_servico;
+
+
+
